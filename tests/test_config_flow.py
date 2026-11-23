@@ -171,3 +171,28 @@ async def test_refresh_button(hass: HomeAssistant) -> None:
             "button", "press", {"entity_id": "button.tank_refresh_now"}, blocking=True
         )
         assert get_tanks.call_count == 2
+
+
+async def test_removed_sensors_are_cleaned_up(hass: HomeAssistant) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234567",
+        data={
+            CONF_USERNAME: "kunde@example.org",
+            CONF_PASSWORD: "pw",
+            CONF_CUSTOMER_NUMBER: "1234567",
+        },
+    )
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    old = registry.async_get_or_create(
+        "sensor", DOMAIN, f"{ASSET['assetId']}_estimated_level", config_entry=entry
+    )
+    tanks = {ASSET["assetId"]: Tank(ASSET["assetId"], ASSET["assetId"], ASSET)}
+    with patch(GET_TANKS, return_value=tanks):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert registry.async_get(old.entity_id) is None
+    assert hass.states.get("sensor.tank_fill_level").state == "61"

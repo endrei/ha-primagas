@@ -58,9 +58,6 @@
       "volume": {
         "name": "Volume"
       },
-      "estimated_level": {
-        "name": "Estimated fill level"
-      },
       "stock_left": {
         "name": "Stock left"
       },
@@ -69,9 +66,6 @@
       },
       "replenishment_order_date": {
         "name": "Next order date"
-      },
-      "replenishment_volume": {
-        "name": "Expected delivery volume"
       },
       "forecast_time": {
         "name": "Forecast time"

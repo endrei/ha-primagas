@@ -18,11 +18,9 @@ deines Flüssiggastanks als Sensoren in Home Assistant bereitstellt.
 |---|---|
 | Füllstand | % |
 | Füllmenge | l |
-| Geschätzter Füllstand (Prognose) | % |
 | Reichweite | Tage |
 | Voraussichtlich leer am | Datum |
 | Nächste Bestellung | Datum |
-| Voraussichtliche Liefermenge (Prognose von PRIMAGAS für die nächste Befüllung) | l |
 | Stand der Prognose, Tankvolumen, Maximale Füllmenge | Diagnose |
 | Status, Letzte erfolgreiche Abfrage | Diagnose, siehe unten |
 

@@ -15,12 +15,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import PrimagasConfigEntry
 from .api import Tank
+from .const import DOMAIN
 from .coordinator import STATUS_OPTIONS, PrimagasCoordinator
 from .entity import tank_device_info
 
@@ -56,13 +58,6 @@ SENSORS: tuple[PrimagasSensorDescription, ...] = (
         value_fn=lambda t: t.raw.get("assetCurrentFillingVolume"),
     ),
     PrimagasSensorDescription(
-        key="estimated_level",
-        translation_key="estimated_level",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda t: t.forecast.get("estimatedCurrentFillingLevelPercentage"),
-    ),
-    PrimagasSensorDescription(
         key="stock_left",
         translation_key="stock_left",
         device_class=SensorDeviceClass.DURATION,
@@ -80,13 +75,6 @@ SENSORS: tuple[PrimagasSensorDescription, ...] = (
         translation_key="replenishment_order_date",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda t: _ts(t.forecast.get("predictedReplenishmentOrderDate")),
-    ),
-    PrimagasSensorDescription(
-        key="replenishment_volume",
-        translation_key="replenishment_volume",
-        device_class=SensorDeviceClass.VOLUME_STORAGE,
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        value_fn=lambda t: t.forecast.get("replenishmentVolumeToDeliverLiter"),
     ),
     PrimagasSensorDescription(
         key="forecast_time",
@@ -114,12 +102,23 @@ SENSORS: tuple[PrimagasSensorDescription, ...] = (
 )
 
 
+# Sensors that existed in earlier versions and are removed from the registry.
+REMOVED_KEYS = ("estimated_level", "replenishment_volume")
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PrimagasConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
+    registry = er.async_get(hass)
+    for asset_id in coordinator.data:
+        for key in REMOVED_KEYS:
+            if entity_id := registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{asset_id}_{key}"
+            ):
+                registry.async_remove(entity_id)
     async_add_entities(
         PrimagasSensor(coordinator, asset_id, description)
         for asset_id in coordinator.data

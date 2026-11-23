@@ -58,9 +58,6 @@
       "volume": {
         "name": "Füllmenge"
       },
-      "estimated_level": {
-        "name": "Geschätzter Füllstand"
-      },
       "stock_left": {
         "name": "Reichweite"
       },
@@ -69,9 +66,6 @@
       },
       "replenishment_order_date": {
         "name": "Nächste Bestellung"
-      },
-      "replenishment_volume": {
-        "name": "Voraussichtliche Liefermenge"
       },
       "forecast_time": {
         "name": "Stand der Prognose"
