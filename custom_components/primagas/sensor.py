@@ -23,7 +23,7 @@ from homeassistant.util import dt as dt_util
 from . import PrimagasConfigEntry
 from .api import Tank
 from .const import DOMAIN
-from .coordinator import PrimagasCoordinator
+from .coordinator import STATUS_OPTIONS, PrimagasCoordinator
 
 
 def _ts(value: Any) -> datetime | None:
@@ -126,6 +126,32 @@ async def async_setup_entry(
         for asset_id in coordinator.data
         for description in SENSORS
     )
+    async_add_entities(
+        entity
+        for asset_id in coordinator.data
+        for entity in (
+            PrimagasStatusSensor(coordinator, asset_id, STATUS_DESCRIPTION),
+            PrimagasLastSuccessSensor(coordinator, asset_id, LAST_SUCCESS_DESCRIPTION),
+        )
+    )
+
+
+STATUS_DESCRIPTION = PrimagasSensorDescription(
+    key="status",
+    translation_key="status",
+    device_class=SensorDeviceClass.ENUM,
+    options=STATUS_OPTIONS,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    value_fn=lambda t: None,
+)
+
+LAST_SUCCESS_DESCRIPTION = PrimagasSensorDescription(
+    key="last_success",
+    translation_key="last_success",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    value_fn=lambda t: None,
+)
 
 
 class PrimagasSensor(CoordinatorEntity[PrimagasCoordinator], SensorEntity):
@@ -163,3 +189,47 @@ class PrimagasSensor(CoordinatorEntity[PrimagasCoordinator], SensorEntity):
     def native_value(self) -> Any:
         tank = self.coordinator.data.get(self._asset_id)
         return self.entity_description.value_fn(tank) if tank else None
+
+
+class PrimagasStatusSensor(PrimagasSensor):
+    """Result of the latest poll. Stays available when the poll fails."""
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_value(self) -> str:
+        return self.coordinator.update_status.status
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        status = self.coordinator.update_status
+        next_update = None
+        if status.last_attempt and self.coordinator.update_interval:
+            next_update = status.last_attempt + self.coordinator.update_interval
+        return {
+            "error": status.error,
+            "http_status": status.http_status,
+            "last_attempt": status.last_attempt,
+            "last_success": status.last_success,
+            "next_update": next_update,
+            "consecutive_failures": status.consecutive_failures,
+            "update_interval_hours": (
+                self.coordinator.update_interval.total_seconds() / 3600
+                if self.coordinator.update_interval
+                else None
+            ),
+        }
+
+
+class PrimagasLastSuccessSensor(PrimagasSensor):
+    """Time of the last successful poll. Stays available when the poll fails."""
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.update_status.last_success is not None
+
+    @property
+    def native_value(self) -> datetime | None:
+        return self.coordinator.update_status.last_success

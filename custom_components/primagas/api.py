@@ -64,6 +64,10 @@ class PrimagasConnectionError(PrimagasError):
     """Network problem or unexpected answer from the portal."""
 
 
+class PrimagasPortalError(PrimagasConnectionError):
+    """The PRIMAGAS login answered with an error or an unexpected page."""
+
+
 class PrimagasCustomerNumberError(PrimagasError):
     """The customer number could not be found automatically."""
 
@@ -245,7 +249,7 @@ class PrimagasClient:
                 bool(csrf_match),
                 bool(trans_match),
             )
-            raise PrimagasConnectionError("Login page has an unexpected format")
+            raise PrimagasPortalError("Login page has an unexpected format")
         _LOGGER.debug("PRIMAGAS login step 1 (authorize) ok")
         # The login page's own script sends these with every request.
         headers = {**headers, "Origin": B2C_HOST, "Referer": f"{B2C_HOST}/"}
@@ -277,7 +281,7 @@ class PrimagasClient:
                 "PRIMAGAS login step 2 (credentials): unexpected answer: %s",
                 _snippet(body),
             )
-            raise PrimagasConnectionError("Unexpected sign-in answer") from err
+            raise PrimagasPortalError("Unexpected sign-in answer") from err
         if status != "200":
             _LOGGER.warning(
                 "PRIMAGAS login step 2 (credentials) rejected: status=%s "
@@ -325,7 +329,7 @@ class PrimagasClient:
                 else "-",
                 _snippet(text),
             )
-            raise PrimagasConnectionError("No authorization code received")
+            raise PrimagasPortalError("No authorization code received")
         _LOGGER.debug("PRIMAGAS login step 3 (confirm) ok")
 
         # 4. Token: exchange the code
@@ -385,9 +389,7 @@ class PrimagasClient:
                         ", ".join(c.key for c in self._session.cookie_jar) or "-",
                         _snippet(text),
                     )
-                    raise PrimagasConnectionError(
-                        f"PRIMAGAS login answered {resp.status}"
-                    )
+                    raise PrimagasPortalError(f"PRIMAGAS login answered {resp.status}")
                 return text
         except PrimagasError:
             raise
@@ -438,9 +440,7 @@ class PrimagasClient:
                         raise PrimagasAuthError(
                             f"Token endpoint answered {resp.status}"
                         )
-                    raise PrimagasConnectionError(
-                        f"Token endpoint answered {resp.status}"
-                    )
+                    raise PrimagasPortalError(f"Token endpoint answered {resp.status}")
                 return await resp.json(content_type=None)
         except PrimagasError:
             raise

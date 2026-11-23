@@ -81,6 +81,45 @@
       },
       "max_volume": {
         "name": "Maximale Füllmenge"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "ok": "OK",
+          "auth_failed": "Anmeldung abgelehnt",
+          "portal_error": "Störung beim PRIMAGAS-Login",
+          "api_unavailable": "PRIMAGAS-Daten nicht verfügbar",
+          "api_error": "Datenabruf abgelehnt",
+          "connection_error": "Keine Verbindung",
+          "no_tanks": "Keine Tanks gefunden",
+          "integration_error": "Fehler in der Integration"
+        },
+        "state_attributes": {
+          "error": {
+            "name": "Fehlermeldung"
+          },
+          "http_status": {
+            "name": "HTTP-Status"
+          },
+          "last_attempt": {
+            "name": "Letzter Versuch"
+          },
+          "last_success": {
+            "name": "Letzter Erfolg"
+          },
+          "next_update": {
+            "name": "Nächste Abfrage"
+          },
+          "consecutive_failures": {
+            "name": "Fehlversuche in Folge"
+          },
+          "update_interval_hours": {
+            "name": "Abfrageintervall (h)"
+          }
+        }
+      },
+      "last_success": {
+        "name": "Letzte erfolgreiche Abfrage"
       }
     }
   }

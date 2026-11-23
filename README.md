@@ -24,6 +24,52 @@ deines Flüssiggastanks als Sensoren in Home Assistant bereitstellt.
 | Nächste Bestellung | Datum |
 | Voraussichtliche Liefermenge (Prognose von PRIMAGAS für die nächste Befüllung) | l |
 | Stand der Prognose, Tankvolumen, Maximale Füllmenge | Diagnose |
+| Status, Letzte erfolgreiche Abfrage | Diagnose, siehe unten |
+
+## Status-Entität (Fehlersuche)
+
+Unter *Diagnose* zeigt **Status**, wie die letzte Abfrage ausgegangen ist. Die
+Entität bleibt auch bei Störungen verfügbar. Die übrigen Sensoren werden dann
+„nicht verfügbar“, **Letzte erfolgreiche Abfrage** zeigt, wie alt die Werte sind.
+
+| Status | Bedeutung | Was tun? |
+|---|---|---|
+| OK | Daten wurden abgerufen. | – |
+| Anmeldung abgelehnt | PRIMAGAS hat E-Mail oder Passwort abgelehnt. | HA fordert zur erneuten Anmeldung auf. Passwort prüfen, z. B. nach einer Änderung im Portal. |
+| Störung beim PRIMAGAS-Login | Die Login-Seite hat einen Fehler oder eine unerwartete Antwort geliefert. | Meist eine Störung bei PRIMAGAS. Geht es auch auf kunden.primagas.de nicht, abwarten. Bleibt der Fehler, hat sich vermutlich der Login geändert: Issue anlegen. |
+| PRIMAGAS-Daten nicht verfügbar | Die Daten-API von PRIMAGAS antwortet mit HTTP 5xx oder 429. | Störung oder Wartung bei PRIMAGAS. Abwarten, die Integration versucht es beim nächsten Intervall erneut. |
+| Datenabruf abgelehnt | Login ok, aber die Daten-API lehnt die Anfrage ab (HTTP 4xx). | Kundennummer prüfen. Bleibt der Fehler, hat sich vermutlich die Schnittstelle geändert: Issue anlegen. |
+| Keine Verbindung | Netzwerkfehler oder Zeitüberschreitung. | Internetverbindung und DNS von Home Assistant prüfen. |
+| Keine Tanks gefunden | Das Konto enthält keinen Tank. | Im Portal prüfen, ob der Tank dort angezeigt wird. |
+| Fehler in der Integration | Ein unerwarteter Fehler in dieser Integration. | Debug-Log einschalten (siehe unten) und ein Issue mit dem Log anlegen. |
+
+Attribute der Status-Entität:
+
+| Attribut | Inhalt |
+|---|---|
+| Fehlermeldung | Kurzer Fehlertext (ohne Zugangsdaten, Kundennummer ausgeblendet) |
+| HTTP-Status | HTTP-Code der Fehlerantwort, falls vorhanden |
+| Letzter Versuch / Letzter Erfolg / Nächste Abfrage | Zeitpunkte der Abfragen |
+| Fehlversuche in Folge | Wird nach einer erfolgreichen Abfrage auf 0 gesetzt |
+| Abfrageintervall (h) | Eingestelltes Intervall |
+
+Beispiel für eine Benachrichtigung, wenn die Abfrage seit drei Versuchen scheitert:
+
+```yaml
+automation:
+  - alias: PRIMAGAS Abfrage gestört
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.gastank_status
+        attribute: consecutive_failures
+        above: 2
+    actions:
+      - action: notify.notify
+        data:
+          message: "PRIMAGAS: {{ states('sensor.gastank_status') }} – {{ state_attr('sensor.gastank_status', 'error') }}"
+```
+
+Die Entitäts-ID hängt vom Namen deines Tanks ab.
 
 ## Installation
 

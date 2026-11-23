@@ -81,6 +81,45 @@
       },
       "max_volume": {
         "name": "Maximum volume"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "ok": "OK",
+          "auth_failed": "Sign-in rejected",
+          "portal_error": "PRIMAGAS login problem",
+          "api_unavailable": "PRIMAGAS data unavailable",
+          "api_error": "Data request rejected",
+          "connection_error": "No connection",
+          "no_tanks": "No tanks found",
+          "integration_error": "Integration error"
+        },
+        "state_attributes": {
+          "error": {
+            "name": "Error message"
+          },
+          "http_status": {
+            "name": "HTTP status"
+          },
+          "last_attempt": {
+            "name": "Last attempt"
+          },
+          "last_success": {
+            "name": "Last success"
+          },
+          "next_update": {
+            "name": "Next update"
+          },
+          "consecutive_failures": {
+            "name": "Consecutive failures"
+          },
+          "update_interval_hours": {
+            "name": "Update interval (h)"
+          }
+        }
+      },
+      "last_success": {
+        "name": "Last successful update"
       }
     }
   }

@@ -85,3 +85,51 @@ async def test_failed_attempt_does_not_block_new_flow(hass: HomeAssistant) -> No
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_status_sensor(hass: HomeAssistant) -> None:
+    from custom_components.primagas.api import PrimagasApiError, PrimagasPortalError
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234567",
+        data={
+            CONF_USERNAME: "kunde@example.org",
+            CONF_PASSWORD: "pw",
+            CONF_CUSTOMER_NUMBER: "1234567",
+        },
+    )
+    entry.add_to_hass(hass)
+    tanks = {ASSET["assetId"]: Tank(ASSET["assetId"], ASSET["assetId"], ASSET)}
+    with patch(GET_TANKS, return_value=tanks):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    status = hass.states.get("sensor.tank_status")
+    assert status.state == "ok"
+    assert status.attributes["consecutive_failures"] == 0
+    assert hass.states.get("sensor.tank_last_successful_update").state != "unavailable"
+
+    coordinator = entry.runtime_data
+    with patch(GET_TANKS, side_effect=PrimagasPortalError("login page changed")):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+    status = hass.states.get("sensor.tank_status")
+    assert status.state == "portal_error"
+    assert status.attributes["error"] == "login page changed"
+    assert status.attributes["consecutive_failures"] == 1
+    assert hass.states.get("sensor.tank_fill_level").state == "unavailable"
+    assert hass.states.get("sensor.tank_last_successful_update").state != "unavailable"
+
+    with patch(GET_TANKS, side_effect=PrimagasApiError("API answered 503", 503)):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+    status = hass.states.get("sensor.tank_status")
+    assert status.state == "api_unavailable"
+    assert status.attributes["http_status"] == 503
+    assert status.attributes["consecutive_failures"] == 2
+
+    with patch(GET_TANKS, return_value=tanks):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+    assert hass.states.get("sensor.tank_status").state == "ok"
+    assert hass.states.get("sensor.tank_fill_level").state == "61"
