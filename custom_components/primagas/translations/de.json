@@ -121,6 +121,16 @@
       "last_success": {
         "name": "Letzte erfolgreiche Abfrage"
       }
+    },
+    "button": {
+      "refresh": {
+        "name": "Jetzt abrufen"
+      }
+    }
+  },
+  "exceptions": {
+    "refresh_too_soon": {
+      "message": "Die letzte Abfrage ist weniger als {seconds} Sekunden her. Bitte kurz warten."
     }
   }
 }

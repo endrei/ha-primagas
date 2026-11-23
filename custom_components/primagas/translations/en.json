@@ -121,6 +121,16 @@
       "last_success": {
         "name": "Last successful update"
       }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh now"
+      }
+    }
+  },
+  "exceptions": {
+    "refresh_too_soon": {
+      "message": "The last update was less than {seconds} seconds ago. Please wait a moment."
     }
   }
 }

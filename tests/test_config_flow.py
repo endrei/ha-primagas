@@ -133,3 +133,41 @@ async def test_status_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert hass.states.get("sensor.tank_status").state == "ok"
     assert hass.states.get("sensor.tank_fill_level").state == "61"
+
+
+async def test_refresh_button(hass: HomeAssistant) -> None:
+    import pytest
+    from homeassistant.exceptions import HomeAssistantError
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234567",
+        data={
+            CONF_USERNAME: "kunde@example.org",
+            CONF_PASSWORD: "pw",
+            CONF_CUSTOMER_NUMBER: "1234567",
+        },
+    )
+    entry.add_to_hass(hass)
+    tanks = {ASSET["assetId"]: Tank(ASSET["assetId"], ASSET["assetId"], ASSET)}
+    with patch(GET_TANKS, return_value=tanks) as get_tanks:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.states.get("button.tank_refresh_now") is not None
+        assert get_tanks.call_count == 1
+
+        # Right after setup the button refuses, to protect the portal.
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "button",
+                "press",
+                {"entity_id": "button.tank_refresh_now"},
+                blocking=True,
+            )
+        assert get_tanks.call_count == 1
+
+        entry.runtime_data.update_status.last_attempt = None
+        await hass.services.async_call(
+            "button", "press", {"entity_id": "button.tank_refresh_now"}, blocking=True
+        )
+        assert get_tanks.call_count == 2

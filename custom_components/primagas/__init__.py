@@ -10,7 +10,7 @@ from .api import PrimagasClient, create_session
 from .const import CONF_CUSTOMER_NUMBER
 from .coordinator import PrimagasCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 type PrimagasConfigEntry = ConfigEntry[PrimagasCoordinator]
 

@@ -15,15 +15,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import PrimagasConfigEntry
 from .api import Tank
-from .const import DOMAIN
 from .coordinator import STATUS_OPTIONS, PrimagasCoordinator
+from .entity import tank_device_info
 
 
 def _ts(value: Any) -> datetime | None:
@@ -170,16 +169,7 @@ class PrimagasSensor(CoordinatorEntity[PrimagasCoordinator], SensorEntity):
         self.entity_description = description
         self._asset_id = asset_id
         self._attr_unique_id = f"{asset_id}_{description.key}"
-        tank = coordinator.data[asset_id]
-        capacity = tank.raw.get("assetCapacity")
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, asset_id)},
-            manufacturer="PRIMAGAS",
-            model=f"Flüssiggastank {capacity} l" if capacity else "Flüssiggastank",
-            name=tank.raw.get("assetDescription") or "PRIMAGAS Tank",
-            serial_number=tank.raw.get("assetNumber"),
-            configuration_url="https://kunden.primagas.de/",
-        )
+        self._attr_device_info = tank_device_info(coordinator, asset_id)
 
     @property
     def available(self) -> bool:

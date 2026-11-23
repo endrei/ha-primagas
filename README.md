@@ -26,6 +26,11 @@ deines Flüssiggastanks als Sensoren in Home Assistant bereitstellt.
 | Stand der Prognose, Tankvolumen, Maximale Füllmenge | Diagnose |
 | Status, Letzte erfolgreiche Abfrage | Diagnose, siehe unten |
 
+Außerdem gibt es pro Tank den Button **Jetzt abrufen**. Er holt die Daten sofort,
+unabhängig vom Intervall, und funktioniert auch, wenn die letzte Abfrage
+fehlgeschlagen ist. Zum Schutz des Portals ist höchstens eine Abfrage pro Minute
+möglich.
+
 ## Status-Entität (Fehlersuche)
 
 Unter *Diagnose* zeigt **Status**, wie die letzte Abfrage ausgegangen ist. Die
@@ -73,8 +78,11 @@ Die Entitäts-ID hängt vom Namen deines Tanks ab.
 
 ## Installation
 
-### HACS (benutzerdefiniertes Repository)
-1. HACS → ⋮ → *Benutzerdefinierte Repositories* → URL dieses Repositories, Typ *Integration*.
+### HACS
+[![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=endrei&repository=ha-primagas&category=integration)
+
+Bis die Integration im HACS-Standardkatalog ist, als benutzerdefiniertes Repository:
+1. HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/endrei/ha-primagas`, Typ *Integration*.
 2. „PRIMAGAS“ installieren und Home Assistant neu starten.
 
 ### Manuell
