@@ -1,0 +1,165 @@
+"""Sensors for PRIMAGAS tanks."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime, UnitOfVolume
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
+
+from . import PrimagasConfigEntry
+from .api import Tank
+from .const import DOMAIN
+from .coordinator import PrimagasCoordinator
+
+
+def _ts(value: Any) -> datetime | None:
+    if not value:
+        return None
+    parsed = dt_util.parse_datetime(str(value))
+    if parsed and parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt_util.UTC)
+    return parsed
+
+
+@dataclass(frozen=True, kw_only=True)
+class PrimagasSensorDescription(SensorEntityDescription):
+    value_fn: Callable[[Tank], Any]
+
+
+SENSORS: tuple[PrimagasSensorDescription, ...] = (
+    PrimagasSensorDescription(
+        key="level",
+        translation_key="level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda t: t.raw.get("assetCurrentLevelPercentage"),
+    ),
+    PrimagasSensorDescription(
+        key="volume",
+        translation_key="volume",
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda t: t.raw.get("assetCurrentFillingVolume"),
+    ),
+    PrimagasSensorDescription(
+        key="estimated_level",
+        translation_key="estimated_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda t: t.forecast.get("estimatedCurrentFillingLevelPercentage"),
+    ),
+    PrimagasSensorDescription(
+        key="stock_left",
+        translation_key="stock_left",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        value_fn=lambda t: t.forecast.get("stockLeftInDays"),
+    ),
+    PrimagasSensorDescription(
+        key="runout_date",
+        translation_key="runout_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda t: _ts(t.forecast.get("predictedRunoutDate")),
+    ),
+    PrimagasSensorDescription(
+        key="replenishment_order_date",
+        translation_key="replenishment_order_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda t: _ts(t.forecast.get("predictedReplenishmentOrderDate")),
+    ),
+    PrimagasSensorDescription(
+        key="replenishment_volume",
+        translation_key="replenishment_volume",
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        value_fn=lambda t: t.forecast.get("replenishmentVolumeToDeliverLiter"),
+    ),
+    PrimagasSensorDescription(
+        key="forecast_time",
+        translation_key="forecast_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda t: _ts(t.forecast.get("forecastDateTime")),
+    ),
+    PrimagasSensorDescription(
+        key="capacity",
+        translation_key="capacity",
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda t: t.raw.get("assetCapacity"),
+    ),
+    PrimagasSensorDescription(
+        key="max_volume",
+        translation_key="max_volume",
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda t: t.raw.get("assetMaximumFillingVolume"),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PrimagasConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    coordinator = entry.runtime_data
+    async_add_entities(
+        PrimagasSensor(coordinator, asset_id, description)
+        for asset_id in coordinator.data
+        for description in SENSORS
+    )
+
+
+class PrimagasSensor(CoordinatorEntity[PrimagasCoordinator], SensorEntity):
+    """One value of one tank."""
+
+    _attr_has_entity_name = True
+    entity_description: PrimagasSensorDescription
+
+    def __init__(
+        self,
+        coordinator: PrimagasCoordinator,
+        asset_id: str,
+        description: PrimagasSensorDescription,
+    ) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._asset_id = asset_id
+        self._attr_unique_id = f"{asset_id}_{description.key}"
+        tank = coordinator.data[asset_id]
+        capacity = tank.raw.get("assetCapacity")
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, asset_id)},
+            manufacturer="PRIMAGAS",
+            model=f"Flüssiggastank {capacity} l" if capacity else "Flüssiggastank",
+            name=tank.raw.get("assetDescription") or "PRIMAGAS Tank",
+            serial_number=tank.raw.get("assetNumber"),
+            configuration_url="https://kunden.primagas.de/",
+        )
+
+    @property
+    def available(self) -> bool:
+        return super().available and self._asset_id in self.coordinator.data
+
+    @property
+    def native_value(self) -> Any:
+        tank = self.coordinator.data.get(self._asset_id)
+        return self.entity_description.value_fn(tank) if tank else None

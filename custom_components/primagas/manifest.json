@@ -1,0 +1,14 @@
+{
+  "domain": "primagas",
+  "name": "PRIMAGAS",
+  "codeowners": [
+    "@endrei"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/endrei/ha-primagas",
+  "issue_tracker": "https://github.com/endrei/ha-primagas/issues",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "0.1.0"
+}

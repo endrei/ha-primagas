@@ -1,0 +1,87 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PRIMAGAS Kundenportal",
+        "description": "Melde dich mit den Zugangsdaten von kunden.primagas.de an. Die Kundennummer ist optional. Lass sie leer, dann wird sie nach der Anmeldung ermittelt. Klappt das nicht, fragt HA danach. Sie steht auf deiner Rechnung oder im Portal.",
+        "data": {
+          "username": "E-Mail-Adresse",
+          "password": "Passwort",
+          "customer_number": "Kundennummer"
+        }
+      },
+      "reauth_confirm": {
+        "title": "PRIMAGAS erneut anmelden",
+        "description": "Die Anmeldung für {username} ist fehlgeschlagen. Bitte gib das aktuelle Passwort ein.",
+        "data": {
+          "password": "Passwort"
+        }
+      },
+      "reconfigure": {
+        "title": "Zugangsdaten ändern",
+        "data": {
+          "username": "E-Mail-Adresse",
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "E-Mail-Adresse oder Passwort wurde von PRIMAGAS abgelehnt.",
+      "cannot_connect": "PRIMAGAS ist nicht erreichbar oder hat unerwartet geantwortet. Details stehen im Log.",
+      "unknown": "Unerwarteter Fehler, siehe Log.",
+      "api_error": "Anmeldung erfolgreich, aber die Tankdaten konnten nicht abgerufen werden. Prüfe die Kundennummer. Details stehen im Log.",
+      "customer_number_required": "Anmeldung erfolgreich, aber die Kundennummer wurde nicht automatisch gefunden. Bitte trage sie ein."
+    },
+    "abort": {
+      "already_configured": "Diese Kundennummer ist bereits eingerichtet.",
+      "reauth_successful": "Anmeldung erneuert.",
+      "reconfigure_successful": "Zugangsdaten geändert.",
+      "already_in_progress": "Die Einrichtung läuft bereits in einem anderen Fenster."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Abfrageintervall",
+        "description": "Primagas aktualisiert die Tankdaten meist nur ein- bis zweimal am Tag. Ein Intervall von mehreren Stunden genügt.",
+        "data": {
+          "scan_interval_hours": "Intervall in Stunden"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "level": {
+        "name": "Füllstand"
+      },
+      "volume": {
+        "name": "Füllmenge"
+      },
+      "estimated_level": {
+        "name": "Geschätzter Füllstand"
+      },
+      "stock_left": {
+        "name": "Reichweite"
+      },
+      "runout_date": {
+        "name": "Voraussichtlich leer am"
+      },
+      "replenishment_order_date": {
+        "name": "Nächste Bestellung"
+      },
+      "replenishment_volume": {
+        "name": "Voraussichtliche Liefermenge"
+      },
+      "forecast_time": {
+        "name": "Stand der Prognose"
+      },
+      "capacity": {
+        "name": "Tankvolumen"
+      },
+      "max_volume": {
+        "name": "Maximale Füllmenge"
+      }
+    }
+  }
+}

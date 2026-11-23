@@ -1,0 +1,87 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PRIMAGAS customer portal",
+        "description": "Sign in with your kunden.primagas.de credentials. The customer number is optional. Leave it empty and it is looked up after sign-in. If that fails you will be asked for it. It is on your invoice or in the portal.",
+        "data": {
+          "username": "E-mail address",
+          "password": "Password",
+          "customer_number": "Customer number"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate PRIMAGAS",
+        "description": "Sign-in for {username} failed. Please enter the current password.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Change credentials",
+        "data": {
+          "username": "E-mail address",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "PRIMAGAS rejected the e-mail address or password.",
+      "cannot_connect": "Cannot reach PRIMAGAS or unexpected answer. See the log for details.",
+      "unknown": "Unexpected error, see log.",
+      "api_error": "Signed in, but the tank data could not be read. Check the customer number. See the log for details.",
+      "customer_number_required": "Signed in, but the customer number was not found automatically. Please enter it."
+    },
+    "abort": {
+      "already_configured": "This customer number is already configured.",
+      "reauth_successful": "Re-authentication successful.",
+      "reconfigure_successful": "Credentials updated.",
+      "already_in_progress": "Setup is already in progress."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling interval",
+        "description": "PRIMAGAS updates tank data only once or twice a day. An interval of several hours is enough.",
+        "data": {
+          "scan_interval_hours": "Interval in hours"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "level": {
+        "name": "Fill level"
+      },
+      "volume": {
+        "name": "Volume"
+      },
+      "estimated_level": {
+        "name": "Estimated fill level"
+      },
+      "stock_left": {
+        "name": "Stock left"
+      },
+      "runout_date": {
+        "name": "Predicted runout"
+      },
+      "replenishment_order_date": {
+        "name": "Next order date"
+      },
+      "replenishment_volume": {
+        "name": "Expected delivery volume"
+      },
+      "forecast_time": {
+        "name": "Forecast time"
+      },
+      "capacity": {
+        "name": "Tank capacity"
+      },
+      "max_volume": {
+        "name": "Maximum volume"
+      }
+    }
+  }
+}
